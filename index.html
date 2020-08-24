@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>Hi Chat Bot</title>
+
+   <!-- FONTS -->
+   <link href="https://fonts.googleapis.com/css?family=Pacifico&display=swap" rel="stylesheet">
+
+   <!-- LIBRARIES -->
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+
+   <style>
+      *{
+         margin: 0px;
+         padding: 0px;
+         box-sizing: border-box;
+      }
+
+      #app-socketIO-container{
+         display: block;
+         width: 100%;
+         height: 100%;
+         position: fixed;
+         top: 0px;
+         left: 0px;
+         padding: 20px;
+         overflow: hidden auto;
+      }
+      #chatBot-container{
+         margin-top: 20px;
+      }
+      #chatBot-container #chatBot-Box{
+         display: none;
+      }
+      .chatBot-title{
+         font-family: 'Pacifico', cursive;
+         font-weight: bold;
+         padding-bottom: 20px;
+      }
+      .well{
+         
+      }
+      .chatBot-users{
+         width: 100%;
+         height: 400px;
+         position: relative;
+         padding: 10px;
+      }
+      .chatBot-users #userThatOnline{
+         width: 100%;
+         height: calc( 100% - 80px );
+         position: absolute;
+         top: 80px;
+         left: 0px;
+         overflow: hidden auto;
+      }
+      .chatBot-users #userThatOnline .usersListrow{
+         padding: 10px 25px;
+         font-family: sans-serif;
+         font-size: 14px;
+         background-color: rgba(33,33,33,0.1);
+         margin: 5px;
+         border-radius: 5px;
+      }
+      .chatBot-messageBox{
+         height: 70vh;
+         overflow: hidden auto;
+      }
+      .well #usersMeassages{
+         height: 250px;
+         overflow: hidden auto;
+      }
+      .well #usersMeassages .messageList{
+         width: 100%;
+         height: fit-content;
+         padding: 5px;
+         border-bottom: 1px solid rgba(0,0,0,.3);
+      }
+      .well.chatBot-messageBox{
+         width: 100%;
+         position: relative;
+         padding: 10px;
+      }
+      .well.chatBot-messageBox #chatBox{
+         width: 100%;
+         height: calc( 100% - 150px ) ;
+         position: absolute;
+         top: 0px;
+         left: 0px;
+         padding: 10px;
+      }
+      .well.chatBot-messageBox #chatBox .ulContainer{
+         width: 100%;
+         height: 100%;
+         border: 1px solid red;
+         overflow: hidden auto;
+      }
+      .well.chatBot-messageBox #chatBox #usersMeassages{
+         width: 100%;
+         height: fit-content;
+         margin: 0px;
+      }
+      .well.chatBot-messageBox #messageForm{
+         width: 100%;
+         height: 150px;
+         position: absolute;
+         bottom: 0px;
+         left: 0px;
+         padding: 10px;
+      }
+      .well.chatBot-messageBox #messageForm .form-group{
+         margin-bottom: 0px;
+      }
+      .well #messageForm .form-group textarea{
+         height: 60px;
+         margin-bottom: 10px;
+      }
+      .well #messageForm .form-group .btn-sendMessage{
+         
+      }
+
+      #userName-container .formContainer {
+         width: 100%;
+         height: 300px;
+         position: relative;
+      }
+      #userName-container .formContainer #userDetailForm{
+         width: 100%;
+         height: 100%;
+         position: absolute;
+         top: 0px;
+         left: 0px;
+      }
+      #userName-container .formContainer #userDetailForm .userName-container{
+         width: 100%;
+         height: 100%;
+         position: absolute;
+         top: 0px;
+         left: 0px;
+      }
+      #userName-container .formContainer #userDetailForm .userName-container #userName{
+         margin-bottom: 10px;
+      }
+
+      @media only screen and (max-width: 720px){
+         #chatBot-container{
+            margin-top: 10px;
+         }  
+         .chatBot-title{
+            padding-bottom: 10px;
+         }
+      }
+   </style>
+
+</head>
+<body>
+
+   <div id="app-socketIO-container" >
+      <div id="chatBot-container" >
+         <div class="row chatBot-title">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+               <h1>Hi Chat Bot</h1>
+            </div>
+         </div>
+         
+         <div class="row" id="chatBot-Box" >
+            <div class="col-xs-12 col-sm-4 col-md-4">
+               <div class="well chatBot-users">
+                  <h3>Online Users</h3>
+                  <div id="userThatOnline">
+                     <ul class="list-group" id="userThatOnlineULcontainer" ></ul>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xs-12 col-sm-8 col-md-8">
+               <div class="well chatBot-messageBox">
+                  <div class="chat" id="chatBox">
+                     <div class="ulContainer">
+                        <ul class="list-group" id="usersMeassages" ></ul>
+                     </div>
+                  </div>
+                  <form id="messageForm" >
+                     <div class="form-group">
+                        <label>Enter Message</label>
+                        <textarea class="form-control" id="message" ></textarea>
+                        <button  type="submit"
+                                 class="btn btn-primary btn-sendMessage" >
+                           <span>Send Message</span>
+                        </button>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         </div>
+         
+         <div class="row" id="userName-container">
+            <div class="userDetailContainer col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2">
+               <div class="formContainer">
+                  <form id="userDetailForm" >
+                     <div class="form-group userName-container">
+                        <label>Enter Username :</label>
+                        <input class="form-control" id="userName" type="text" />
+                        <button  type="submit"
+                                 class="btn btn-primary btn-sendMessage" >
+                           <span>Login</span>
+                        </button>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         </div>
+
+      </div>
+   </div>
+
+   
+   <script>
+      (function(){
+         var socket = io.connect();
+         console.log( "socket connected" );
+
+         var $chatBotBox = $('#chatBot-Box');
+         var $userThatOnline = $('#userThatOnlineULcontainer');
+         var $chat = $('#usersMeassages');
+         var $messageForm = $('#messageForm');
+         var $message = $('#message');
+
+         var $userNameContainer = $('#userName-container');
+         var $userDetailForm = $('#userDetailForm');
+         var $userName = $('#userName');
+
+         $userDetailForm.submit(function(e){
+            e.preventDefault();
+            var botUserName = $userName.val();
+            sendUserNameToChatBot( botUserName );
+            $userName.val('');
+         });
+
+         function sendUserNameToChatBot( botUserName ){
+            console.log( " user name " , botUserName );
+            socket.emit( 'broadcast user' , botUserName , function(){
+               if( botUserName ){
+                  $userNameContainer.hide();
+                  $chatBotBox.show();
+               }
+            });
+            
+         }
+
+         $messageForm.submit(function(e){
+            e.preventDefault();
+            var chatMessage = $message.val();
+            sendMessageToChatBot( chatMessage );
+            $message.val('');
+         });
+
+         function sendMessageToChatBot( chatMessage ){
+            console.log( " send message " , chatMessage );
+            socket.emit( 'broadcast message' , chatMessage );
+         }
+
+         socket.on('add new message' , function( data ){
+
+            let newMessage = `
+            <div class="messageList">
+               <span>`+ data.msg +`</span>
+            </div>
+            `;
+            $chat.append( newMessage );
+
+         });
+
+         socket.on('user list' , function( data ){
+
+            $userThatOnline.html('');
+            console.log( data );
+            for( let u of data.userList ){
+               let newUserLi = `
+                  <li class="usersListrow">
+                     <span>`+ u +`</span>
+                  </li>
+               `;
+               $userThatOnline.append( newUserLi );
+            }
+            
+
+         });
+         
+
+      })();
+
+      
+   </script>
+
+</body>
+</html>  
